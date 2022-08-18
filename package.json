@@ -1,0 +1,17 @@
+{
+  "name": "qwirkle",
+  "version": "1.0.0",
+  "description": "Jeu de formes et de couleurs",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+	"start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Léo Mariey",
+  "license": "ISC"
+}
