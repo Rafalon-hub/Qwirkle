@@ -17,4 +17,6 @@ Web version of a qwirkle game based on node.js
 
 - You can get bonus points by placing tiles matching both direction  
 
+- You can skip your turn by replacing any number of tiles from your hand
+
 - The player who places his last tile gains a bonus
