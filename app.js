@@ -16,7 +16,7 @@ console.log('Server started');
 var COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
 var SHAPES = ['&spades;', '&clubs;', '&hearts;', '&diams;', '&#10022;', '&#10039;'];
 
-var TUILES = [];
+var TILES = [];
 var BOARD = {};
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
@@ -45,7 +45,7 @@ function shuffleArray(array) {
 }
 
 function initializeGame() {
-  TUILES = [];
+  TILES = [];
   BOARD = {};
   IsGameStarted = false;
   EmptyBag = false;
@@ -53,7 +53,7 @@ function initializeGame() {
   for (var i = 0; i < 3; i++) {
     for (var c = 0; c < COLORS.length; c++) {
       for (var s = 0; s < SHAPES.length; s++) {
-        TUILES.push({
+        TILES.push({
           color: COLORS[c],
           shape: SHAPES[s]
         });
@@ -61,7 +61,7 @@ function initializeGame() {
     }
   }
 
-  TUILES = shuffleArray(TUILES);
+  TILES = shuffleArray(TILES);
 }
 
 initializeGame();
@@ -72,7 +72,7 @@ var Player = function (id) {
     name: "Joueur",
     score: 0,
     scores: [],
-    tuiles: [],
+    tiles: [],
     maxCount: 0
   }
   return self;
@@ -101,9 +101,9 @@ io.sockets.on('connection', function (socket) {
 
       player = Player(socket.id);
       for (var i = 0; i < 6; i++) {
-        player.tuiles.push(TUILES.pop());
+        player.tiles.push(TILES.pop());
       }
-      player.maxCount = countMax(player.tuiles);
+      player.maxCount = countMax(player.tiles);
       player.order = 1 + PLAYER_ARRAY.length;
       PLAYER_LIST[socket.id] = player;
       PLAYER_ARRAY.push(player);
@@ -138,8 +138,8 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('disconnect', function () {
     if (!IsGameStarted) {
-      while (player.tuiles.length) {
-        TUILES.push(player.tuiles.pop());
+      while (player.tiles.length) {
+        TILES.push(player.tiles.pop());
       }
     } else {
       PENDING_PLAYERS[socket.id] = player;
@@ -163,21 +163,21 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('changedTiles', function (data) {
     var minLength = data.length;
-    if (TUILES.length < minLength)
-      minLength = TUILES.length;
+    if (TILES.length < minLength)
+      minLength = TILES.length;
 
     for (var i = 0; i < minLength; i++) {
-      player.tuiles.push(TUILES.pop());
+      player.tiles.push(TILES.pop());
     }
     for (var i = 0; i < minLength; i++) {
       //console.log("Tuile changée: ["+data[i].color+","+data[i].shape+"]");
-      for (var j = 0; j < player.tuiles.length; j++) {
-        if (player.tuiles[j].shape == data[i].shape && player.tuiles[j].color == data[i].color) {
-          TUILES.unshift({
+      for (var j = 0; j < player.tiles.length; j++) {
+        if (player.tiles[j].shape == data[i].shape && player.tiles[j].color == data[i].color) {
+          TILES.unshift({
             color: data[i].color,
             shape: data[i].shape
           });
-          player.tuiles.splice(j, 1);
+          player.tiles.splice(j, 1);
           break;
         }
       }
@@ -185,14 +185,14 @@ io.sockets.on('connection', function (socket) {
 
     player.scores.push(0);
 
-    socket.emit('playerTiles', player.tuiles);
+    socket.emit('playerTiles', player.tiles);
 
     PLAYER_ARRAY.push(PLAYER_ARRAY.shift());
     //console.log("Le jeu continue pour "+PLAYER_ARRAY[0].name);
     SOCKET_LIST[PLAYER_ARRAY[0].id].emit('yourTurn');
 
     for (var i in SOCKET_LIST) {
-      SOCKET_LIST[i].emit('tilesLeft', TUILES.length);
+      SOCKET_LIST[i].emit('tilesLeft', TILES.length);
     }
 
     updatePlayerTurn();
@@ -217,9 +217,9 @@ io.sockets.on('connection', function (socket) {
         isNew: true
       };
 
-      for (var j = 0; j < player.tuiles.length; j++) {
-        if (player.tuiles[j].shape == data[i].shape && player.tuiles[j].color == data[i].color) {
-          player.tuiles.splice(j, 1);
+      for (var j = 0; j < player.tiles.length; j++) {
+        if (player.tiles[j].shape == data[i].shape && player.tiles[j].color == data[i].color) {
+          player.tiles.splice(j, 1);
           break;
         }
       }
@@ -249,14 +249,17 @@ io.sockets.on('connection', function (socket) {
       if (scoreSuppl2 == 11)
         nbQwirkle++;
     }
+    if (data.length > 0 && scoreTotal == 0) {
+      scoreTotal = 1;
+    }
 
-    while (TUILES.length && player.tuiles.length < 6) {
-      player.tuiles.push(TUILES.pop());
+    while (TILES.length && player.tiles.length < 6) {
+      player.tiles.push(TILES.pop());
     }
 
     for (var i in SOCKET_LIST) {
       SOCKET_LIST[i].emit('board', BOARD);
-      SOCKET_LIST[i].emit('tilesLeft', TUILES.length);
+      SOCKET_LIST[i].emit('tilesLeft', TILES.length);
     }
 
     var msgToSend = '';
@@ -279,7 +282,7 @@ io.sockets.on('connection', function (socket) {
       default:
         msgToSend = '';
     }
-    if (!TUILES.length && !EmptyBag) {
+    if (!TILES.length && !EmptyBag) {
       if (msgToSend.length > 0)
         msgToSend += '\n';
       msgToSend += 'NAPLOU';
@@ -288,7 +291,7 @@ io.sockets.on('connection', function (socket) {
     }
 
     var gameOver = false;
-    if (!player.tuiles.length) {
+    if (!player.tiles.length) {
       scoreTotal += 6;
       gameOver = true;
       if (msgToSend.length > 0)
@@ -485,7 +488,7 @@ function horizontalScore(i, j) {
 
 function sendPlayerNames() {
   for (var i in SOCKET_LIST) {
-    SOCKET_LIST[i].emit('playerTiles', PLAYER_LIST[i].tuiles);
+    SOCKET_LIST[i].emit('playerTiles', PLAYER_LIST[i].tiles);
     SOCKET_LIST[i].emit('playerNames', PLAYER_LIST);
   }
 }
