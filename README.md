@@ -19,4 +19,6 @@ Web version of a qwirkle game based on node.js
 
 - You can skip your turn by replacing any number of tiles from your hand
 
-- The player who places his last tile gains a +6 bonus
+- After playing, you pick tiles from bag, in order to get 6 in your hands
+
+- Once bag is empty, the player who places his last tile gains a +6 bonus
