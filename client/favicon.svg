@@ -1,0 +1,20 @@
+<svg height="32px" width="32px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+	@keyframes colours {
+	  0% { fill: yellow; }
+	  20% { fill: blue; }
+	  40% { fill: green; }
+	  60% { fill: red; }
+	  80% { fill: purple; }
+	  100% { fill: orange; }
+	}
+	circle {
+	  animation-direction: normal;
+	  animation-duration: 4s;
+	  animation-iteration-count: infinite;
+	  animation-name: colours;
+	  animation-timing-function: linear;
+	}
+  </style>
+  <circle cx="50" cy="50" r="45"/>
+</svg>

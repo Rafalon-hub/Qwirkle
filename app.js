@@ -1,20 +1,18 @@
-var express = require('express');
-var app = express();
-var serv = require('http').Server(app);
+const express = require('express');
+const app = express();
+const serv = require('http').Server(app);
+const PORT = process.env.PORT || 2000;
 
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/client/index.html');
 });
 app.use('/client', express.static(__dirname + '/client'));
 
-//serv.listen(2000, '0.0.0.0', function(){
-//	console.log('Server started');
-//});
-serv.listen(process.env.PORT || 2000);
-console.log('Server started');
+serv.listen(PORT);
+console.log(`Server started on port ${PORT}`);
 
-var COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
-var SHAPES = ['&spades;', '&clubs;', '&hearts;', '&diams;', '&#10022;', '&#10039;'];
+const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
+const SHAPES = ['&spades;', '&clubs;', '&hearts;', '&diams;', '&#10022;', '&#10039;'];
 
 var TILES = [];
 var BOARD = {};
@@ -25,6 +23,11 @@ var IsGameStarted = false;
 var EmptyBag = false;
 var PENDING_PLAYERS = {};
 
+/**
+ * Shuffles an array in place
+ * @param {any[]} array Array that needs to be shuffled
+ * @returns Nothing
+ */
 function shuffleArray(array) {
   var currentIndex = array.length, temporaryValue, randomIndex;
 

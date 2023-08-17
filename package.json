@@ -2,17 +2,21 @@
   "name": "qwirkle",
   "version": "1.0.0",
   "description": "Jeu de formes et de couleurs",
-  "main": "app.js",
+  "main": "app.ts",
   "dependencies": {
     "express": "^4.17.1",
     "nodemon": "^3.0.1",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.3.0",
+    "ts-node": "^10.9.1"
   },
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
+    "start": "node app.ts",
+    "dev": "nodemon app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Léo Mariey",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  }
 }
