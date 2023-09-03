@@ -7,6 +7,7 @@ socket.on('gameStarted', onGameStarted);
 socket.on('playerHand', onPlayerHand);
 socket.on('canPlay', onPlayerCanPlay);
 socket.on('board', onBoard);
+socket.on('message', onMessage);
 
 socket.on('gameOver', gameOver);
 socket.on('error', error);
@@ -33,12 +34,17 @@ function onPlayerCanPlay(socketId) {
   App.Player.onCanPlay(socketId);
 }
 function onBoard(board) {
-  App.tiles = board;
+  App.xStart = board.xStart;
+  App.yStart = board.yStart;
+  App.tiles = board.tiles;
   App.updateBoard();
 }
+function onMessage(msg) {
+  App.displayMessage(msg);
+}
 
-function gameOver() {
-
+function gameOver(scoreBoard) {
+  App.gameOver(scoreBoard);
 }
 function error() {
   
@@ -68,11 +74,17 @@ var App = {
     App.$templateJoinGame = document.getElementById('join-game-template');
     App.$waitingRoom = document.getElementById('waiting-room-template');
     App.$game = document.getElementById('game-template');
+    App.$scoreBoard = document.getElementById('scoreboard-template');
     App.$playerName = document.getElementById('player-name');
     App.$gameId = document.getElementById('game-id');
     App.$board = document.getElementById('board');
     App.$handTiles = document.getElementById('hand').getElementsByTagName('div');
     App.$actions = document.getElementById('actions');
+    App.$actApply = document.getElementById('apply');
+    App.$actChange = document.getElementById('change');
+    App.$actCancel = document.getElementById('cancel');
+    App.$shiftTiles = document.getElementById('shiftTiles');
+    App.$message = document.getElementById('message');
   },
   showInitScreen: function() {
     App.switchView(App.$templateIntroScreen);
@@ -100,12 +112,12 @@ var App = {
     App.$gameArea.appendChild(newView);
   },
   onStartGameClick: function() {
-    socket.emit('startGame', App.gameId);
+    socket.emit('startGame');
   },
   initBoard: function() {
     App.$board.innerHTML = "";
-    for (let i=0; i<20; i++) {
-      for (let j=0; j<20; j++) {
+    for (let i=this.xStart; i<(20+this.xStart); i++) {
+      for (let j=this.yStart; j<(20+this.yStart); j++) {
         App.$board.innerHTML += `<div class='tile' onclick='App.Player.clickBoard(${i},${j})'></div>`;
       }
     }
@@ -114,10 +126,12 @@ var App = {
     App.initBoard();
     App.tiles.forEach((tile) => {
       let theCell = App.getCell(tile.x, tile.y);
-      theCell.innerHTML = tile.shape;
-      theCell.style.color = tile.color;
-      if (tile.justPlaced)
-        theCell.className = 'tile newTile';
+      if (theCell) {
+        theCell.innerHTML = tile.shape;
+        theCell.style.color = tile.color;
+        if (tile.justPlaced)
+          theCell.className = 'tile newTile';
+      }
     });
   },
   checkPossible: function() {
@@ -135,8 +149,8 @@ var App = {
       }
     // if the player hasn't placed any tile, check the full board
     } else if (!App.Player.playedTiles.length) {
-      for (let i=0; i<20; i++) {
-        for (let j=0; j<20; j++) {
+      for (let i=this.xStart; i<(20+this.xStart); i++) {
+        for (let j=this.yStart; j<(20+this.yStart); j++) {
           if (App.canBePlaced(i, j)){
             coords.push({
               x: i,
@@ -171,14 +185,14 @@ var App = {
   },
   /**
    * Gets the HTML cell corresponding to the x/y coordinates
-   * @param {number} x 
-   * @param {number} y 
+   * @param {number} x Absolute X coord
+   * @param {number} y Absolute Y coord
    * @returns HTML cell or null if out of board
    */
   getCell: function(x, y) {
-    if (x < 0 || y < 0 || x > 19 || y > 19)
+    if (x < this.xStart || y < this.yStart || x > (19+this.xStart) || y > (19+this.yStart))
       return null;
-    return App.$board.children[20 * x + y];
+    return this.$board.children[20 * (x-this.xStart) + (y-this.yStart)];
   },
   /**
    * Lists all possible empty cell based on tiles already placed by player
@@ -243,13 +257,13 @@ var App = {
   },
   /**
    * Returns the first free spot on the right of specified coords
-   * @param {number} x 
-   * @param {number} y 
-   * @returns 
+   * @param {number} x Absolute X coord
+   * @param {number} y Absolute Y coord
+   * @returns First free spot {x/y} absolute coords
    */
   rightFrom: function(x, y) {
-    for (let k = y + 1; k < 20; k++) {
-      let theCell = App.getCell(x, k);
+    for (let k = y + 1; k < (20-this.yStart); k++) {
+      let theCell = this.getCell(x, k);
       if (theCell !== null && theCell.innerHTML == '') {
         return {
           x: x,
@@ -266,8 +280,8 @@ var App = {
    * @returns 
    */
   leftFrom: function(x, y) {
-    for (let k = y - 1; k >= 0; k--) {
-      let theCell = App.getCell(x, k);
+    for (let k = y - 1; k >= this.yStart; k--) {
+      let theCell = this.getCell(x, k);
       if (theCell !== null && theCell.innerHTML == '') {
         return {
           x: x,
@@ -284,8 +298,8 @@ var App = {
    * @returns 
    */
   topFrom: function(x, y) {
-    for (let k = x - 1; k >= 0; k--) {
-      let theCell = App.getCell(k, y);
+    for (let k = x - 1; k >= this.xStart; k--) {
+      let theCell = this.getCell(k, y);
       if (theCell !== null && theCell.innerHTML == '') {
         return {
           x: k,
@@ -302,8 +316,8 @@ var App = {
    * @returns {{x: number, y: number} | null}
    */
   bottomFrom: function(x, y) {
-    for (let k = x + 1; k < 20; k++) {
-      let theCell = App.getCell(k, y);
+    for (let k = x + 1; k < (20-this.xStart); k++) {
+      let theCell = this.getCell(k, y);
       if (theCell !== null && theCell.innerHTML == '') {
         return {
           x: k,
@@ -329,7 +343,7 @@ var App = {
     let k;
     let curTile;
 
-    for (k = i - 1; k >= 0; k--) {
+    for (k = i - 1; k >= this.xStart; k--) {
       curTile = App.getCell(k, j);
       if (curTile != null && curTile.innerHTML != '') {
         vList.push({
@@ -340,7 +354,7 @@ var App = {
         break;
       }
     }
-    for (k = +i + 1; k < 20; k++) {
+    for (k = +i + 1; k < (20-this.xStart); k++) {
       curTile = App.getCell(k, j);
       if (curTile != null && curTile.innerHTML != '') {
         vList.push({
@@ -371,7 +385,7 @@ var App = {
     let l;
     let curTile;
 
-    for (l = j - 1; l >= 0; l--) {
+    for (l = j - 1; l >= this.yStart; l--) {
       curTile = App.getCell(i, l);
       if (curTile != null && curTile.innerHTML != '') {
         hList.push({
@@ -382,8 +396,8 @@ var App = {
         break;
       }
     }
-    for (l = +j + 1; l < 20; l++) {
-      curTile = App.getCell(i, l);
+    for (l = +j + 1; l < (20-this.yStart); l++) {
+      curTile = this.getCell(i, l);
       if (curTile != null && curTile.innerHTML != '') {
         hList.push({
           shape: curTile.innerHTML,
@@ -430,11 +444,30 @@ var App = {
 
     return colorCheck != shapeCheck;
   },
-
+  displayMessage: function(msg) {
+    App.$message.classList.remove('none');
+    for (let i=0; i<msg.length; i++) {
+      if (msg[i] === '\n')
+        App.$message.innerHTML += '<br/>';
+      else
+        App.$message.innerHTML += `<span>${msg[i]}</span>`;
+    }
+    setTimeout(() => {
+      App.$message.innerHTML = '';
+      App.$message.classList.add('none')
+    }, 3000);
+  },
   decodeHtml: function(html) {
     let txt = document.createElement("textarea");
     txt.innerHTML = html;
     return txt.value;
+  },
+  gameOver: function(scoreBoard) {
+    this.$scoreBoard.innerHTML = '';
+    for (let i=0; i<scoreBoard.length; i++) {
+      this.$scoreBoard.innerHTML += `<div>${scoreBoard[i].name}: ${scoreBoard[i].score}</div>`;
+    }
+    this.switchView(this.$scoreBoard);
   },
 
   Host: {
@@ -539,13 +572,8 @@ var App = {
       }
     },
     onCanPlay: function(socketId) {
-      if (App.socketId === socketId) {
-        App.Player.canPlay = true;
-        App.$actions.style.display = "block";
-      } else {
-        App.Player.canPlay = false;
-        App.$actions.style.display = "none";
-      }
+      App.Player.canPlay = App.socketId === socketId;
+      this.updateActions();
     },
     selectTile: function(j) {
       if (App.Player.canPlay && j < App.Player.tiles.length) {
@@ -576,7 +604,7 @@ var App = {
   
             App.Player.selectedTile = clickedTile;
   
-            // TO DO : update possible actions
+            this.updateActions();
 
             App.checkPossible();
           }
@@ -607,11 +635,7 @@ var App = {
   
           App.Player.selectedTile = null;
   
-          // if (PLAYED_TILES.length > 0) {
-          //   document.getElementById('apply').innerHTML = 'Jouer';
-          //   document.getElementById('change').style = 'display:none';
-          //   document.getElementById('cancel').style = 'display:inline-block';
-          // }
+          this.updateActions();
         }
       }
     },
@@ -624,15 +648,16 @@ var App = {
       if (App.Player.canPlay) {
         if (!App.Player.isChangingTiles) {
           App.Player.isChangingTiles = true;
+          this.updateActions();
         } else {
           socket.emit('changeTiles', App.Player.tilesToChange);
         }
       }
     },
     cancelMove: function() {
-      if (App.Player.canPlay) {
-        while (App.Player.playedTiles.length) {
-          let value = App.Player.playedTiles.pop();
+      if (this.canPlay) {
+        while (this.playedTiles.length) {
+          let value = this.playedTiles.pop();
           let theCell = App.getCell(value.x, value.y);
           theCell.innerHTML = '';
           theCell.style = '';
@@ -646,29 +671,48 @@ var App = {
         for (let i=0; i<App.$handTiles.length; i++) {
           App.$handTiles[i].className = 'tile';
         }
+
+        App.clearPossible();
+        this.updateActions();
       }
     },
     shiftUp: function() {
-
+      socket.emit('shiftUp');
     },
     shiftDown: function() {
-
+      socket.emit('shiftDown');
     },
     shiftLeft: function() {
-
+      socket.emit('shiftLeft');
     },
     shiftRight: function() {
-
+      socket.emit('shiftRight');
     },
     playedHorizontally: function() {
-      return App.Player.playedTiles.length === 1 ||
-        (App.Player.playedTiles.length > 1 &&
-         App.Player.playedTiles[0].x === App.Player.playedTiles[1].x);
+      return this.playedTiles.length === 1 ||
+        (this.playedTiles.length > 1 &&
+         this.playedTiles[0].x === this.playedTiles[1].x);
     },
     playedVertically: function() {
-      return App.Player.playedTiles.length === 1 ||
-        (App.Player.playedTiles.length > 1 &&
-         App.Player.playedTiles[0].y === App.Player.playedTiles[1].y);
+      return this.playedTiles.length === 1 ||
+        (this.playedTiles.length > 1 &&
+         this.playedTiles[0].y === this.playedTiles[1].y);
+    },
+    updateActions: function() {
+      if (!!this.canPlay) {
+        App.$actions.style.visibility = "visible";
+        App.$shiftTiles.style.visibility = this.selectedTile !== null || this.playedTiles.length > 0 || this.isChangingTiles
+          ? "hidden"
+          : "visible";
+        App.$actApply.innerHTML = this.playedTiles.length > 0 ? "Jouer" : "Passer";
+        App.$actApply.style.visibility = this.isChangingTiles ? "hidden" : "visible";
+        App.$actChange.style.visibility = this.playedTiles.length > 0 ? "hidden" : "visible";
+        App.$actCancel.style.visibility = this.selectedTile !== null || this.playedTiles.length > 0 || this.isChangingTiles
+          ? "visible" : "hidden";
+      } else {
+        App.$actions.style.visibility = "hidden";
+        App.$shiftTiles.style.visibility = "hidden";
+      }
     }
   }
 }

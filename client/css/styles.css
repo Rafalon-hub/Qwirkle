@@ -164,3 +164,23 @@ body {
   aspect-ratio: 1 / 1;
   width: 100%;
 }
+#message {
+  margin: 0 auto;
+}
+.none {
+  display: none !important;
+}
+
+#shiftTiles>button {
+  width: 35px;
+  height: 35px;
+  color: black;
+  font-size: 25px;
+  line-height: 25px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.endShift {
+  margin-left: 35px;
+}

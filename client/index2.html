@@ -92,6 +92,7 @@
     <div id="game-template">
       <div id="game-info">
         <div id="player-name"></div>
+        <div id="message" class="none colorful"></div>
         <div id="game-id"></div>
       </div>
       <div id="hand">
@@ -108,21 +109,24 @@
         <div class="tile" onclick="App.Player.selectTile(5)">
         </div>
       </div>
-      <div id="actions" style="display: none">
+      <div id="actions" style="visibility:hidden">
         <button id="apply" class="btn-success" onclick="App.Player.applyMove()">Jouer</button>
         <button id="change" class="btn-warning" onclick="App.Player.changeTiles()">Changer</button>
         <button id="cancel" class="btn-danger" onclick="App.Player.cancelMove()">Annuler</button>
       </div>
-      <div id="shiftTiles" style="display:none">
-        <button onclick="App.Player.shiftUp()" class="endShift">&#8679;
+      <div id="shiftTiles" style="visibility:hidden">
+        <button onclick="App.Player.shiftUp()" style="display:block">&#8679;
         </button><button onclick="App.Player.shiftLeft()">&#8678;
         </button><button onclick="App.Player.shiftRight()" class="endShift" style="display:inline-block">&#8680;
-        </button><button onclick="App.Player.shiftDown()" class="endShift">&#8681;
+        </button><button onclick="App.Player.shiftDown()" style="display:block">&#8681;
         </button>
       </div>
       <div id="board">
         
       </div>
+    </div>
+
+    <div id="scoreboard-template">
     </div>
   </div>
 

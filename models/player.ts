@@ -88,6 +88,10 @@ export class Player {
     this.score += score;
   }
 
+  /**
+   * Removes tiles from the player's hand
+   * @param tiles Tiles to be removed
+   */
   public removeTiles(tiles: Tile[]): void {
     for (let i = 0; i < tiles.length; i++) {
       let found = false;

@@ -15,6 +15,10 @@ export function initGame(io: any, socket: any) {
   socket.on('startGame', startGame);
   socket.on('applyMove', applyMove);
   socket.on('changeTiles', changeTiles);
+  socket.on('shiftUp', shiftUp);
+  socket.on('shiftDown', shiftDown);
+  socket.on('shiftLeft', shiftLeft);
+  socket.on('shiftRight', shiftRight);
 
   function hostCreateNewGame() {
     const thisGameId = (Math.random() * 100000) | 0;
@@ -38,7 +42,7 @@ export function initGame(io: any, socket: any) {
     game.addPlayer(socket.id, data.playerName);
 
     // Look up the room ID in the Socket.IO manager object.
-    var room = io.sockets.adapter.rooms[data.gameId];
+    let room = io.sockets.adapter.rooms[data.gameId];
 
     // If the room exists...
     if (room != undefined) {
@@ -60,26 +64,77 @@ export function initGame(io: any, socket: any) {
    * - tells which player starts
    * @param gameId 
    */
-  function startGame(gameId: number) {
+  function startGame() {
     game.startGame();
 
-    io.sockets.in(gameId).emit('gameStarted');
+    sendAll('gameStarted');
 
     // Send each player their hands
     game.players.forEach((p: Player) => io.sockets.sockets[p.id].emit('playerHand', p.tiles));
-    io.sockets.in(gameId).emit('canPlay', game.players[0].id);
+    sendNextPlayer();
   }
 
   function applyMove(tiles: Tile[]) {
-    game.applyMove(socket.id, tiles);
-    io.sockets.in(game.gameId).emit('board', game.board.tiles);
-    socket.emit('playerHand', game.getPlayer(socket.id).tiles);
-    io.sockets.in(game.gameId).emit('canPlay', game.players[game.playerTurn].id);
+    let qwirkles = game.applyMove(socket.id, tiles);
+    sendBoard();
+    let player = game.getPlayer(socket.id);
+    if (player.tiles.length === 0) {
+      player.addScore(6);
+      sendAll('gameOver', game.scoreBoard());
+    } else {
+      socket.emit('playerHand', player.tiles);
+      if (player.tiles.length < 6) {
+        sendAll('message', 'NAPLOU!');
+      } else if (qwirkles > 1) {
+        sendAll('message', `Qwirkle x${qwirkles} !`);
+      } else if (qwirkles === 1) {
+        sendAll('message', `Qwirkle !`);
+      }
+      sendNextPlayer();
+    }
   }
 
   function changeTiles(tiles: Tile[]) {
     game.changeTiles(socket.id, tiles);
     socket.emit('playerHand', game.getPlayer(socket.id).tiles);
-    io.sockets.in(game.gameId).emit('canPlay', game.players[game.playerTurn].id);
+    sendNextPlayer();
+  }
+
+  function shiftUp() {
+    game.board.xStart++;
+    sendBoard();
+  }
+  function shiftDown() {
+    game.board.xStart--;
+    sendBoard();
+  }
+  function shiftLeft() {
+    game.board.yStart++;
+    sendBoard();
+  }
+  function shiftRight() {
+    game.board.yStart--;
+    sendBoard();
+  }
+
+  function sendNextPlayer() {
+    sendAll('canPlay', game.getNextPlayerId());
+  }
+
+  function sendBoard() {
+    sendAll('board', {
+      xStart: game.board.xStart,
+      yStart: game.board.yStart,
+      tiles: game.board.tiles
+    });
+  }
+
+  /**
+   * Send an event to all sockets in current room
+   * @param evt Event to send
+   * @param data Data to send
+   */
+  function sendAll(evt: string, data?: any) {
+    io.sockets.in(game.gameId).emit(evt, data);
   }
 }

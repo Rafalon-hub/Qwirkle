@@ -48,19 +48,40 @@ export class QwirkleGame {
     }
   }
 
-  public applyMove(id: string, tiles: Tile[]) {
-    let score = this.board.addTiles(tiles);
+  /**
+   * Applies the move of a player:
+   * - Puts the tiles on the board
+   * - Computes the score for the move
+   * - Fills the player's hand with new tiles
+   * - Update players turn
+   * @param id Player ID
+   * @param tiles Tiles that should be put on the board
+   */
+  public applyMove(id: string, tiles: Tile[]): number {
+    let result = this.board.addTiles(tiles);
     let player = this.getPlayer(id);
 
-    player.addScore(score);
-    if (score > 0) {
+    console.log(`Player ${player.name} placed ${tiles.length} tiles for a score of ${result.score}`);
+    if (result.qwirkles > 0) {
+      console.log(`${result.qwirkles} qwirkles!`);
+    }
+
+    player.addScore(result.score);
+    if (result.score > 0) {
       player.removeTiles(tiles);
       player.drawTiles(this.bag);
     }
 
     this.nextPlayer();
+
+    return result.qwirkles;
   }
 
+  /**
+   * Let a player change some tiles
+   * @param id Player ID
+   * @param tiles Tiles to change
+   */
   public changeTiles(id: string, tiles: Tile[]) {
     let player = this.getPlayer(id);
     player.addScore(0);
@@ -77,7 +98,22 @@ export class QwirkleGame {
     return this.players.find((player: Player) => player.id === id) ?? this.players[0];
   }
 
+  public getNextPlayerId(): string {
+    return this.players[this.playerTurn].id;
+  }
+
   private nextPlayer() {
     this.playerTurn = (this.playerTurn + 1) % this.players.length;
+  }
+
+  public scoreBoard(): { name: string, score: number }[] {
+    let scoreBoard = this.players.map((p) => {
+      return {
+        name: p.name,
+        score: p.score
+      }
+    });
+    scoreBoard.sort((a, b) => a.score - b.score);
+    return scoreBoard;
   }
 }
