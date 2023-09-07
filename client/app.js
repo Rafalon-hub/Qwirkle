@@ -50,7 +50,7 @@ function error() {
   
 }
 
-var App = {
+const App = {
   gameId: 0,
   role: '',
   socketId: '',
@@ -75,6 +75,7 @@ var App = {
     App.$waitingRoom = document.getElementById('waiting-room-template');
     App.$game = document.getElementById('game-template');
     App.$scoreBoard = document.getElementById('scoreboard-template');
+    App.$scoreList = document.getElementById('score-list');
     App.$playerName = document.getElementById('player-name');
     App.$gameId = document.getElementById('game-id');
     App.$board = document.getElementById('board');
@@ -463,9 +464,9 @@ var App = {
     return txt.value;
   },
   gameOver: function(scoreBoard) {
-    this.$scoreBoard.innerHTML = '';
+    this.$scoreList.innerHTML = '';
     for (let i=0; i<scoreBoard.length; i++) {
-      this.$scoreBoard.innerHTML += `<div>${scoreBoard[i].name}: ${scoreBoard[i].score}</div>`;
+      this.$scoreList.innerHTML += `<tr><td>#${i+1}</td><td>${scoreBoard[i].name}</td><td>${scoreBoard[i].score}</td></tr>`;
     }
     this.switchView(this.$scoreBoard);
   },
@@ -483,7 +484,7 @@ var App = {
       App.role = 'Host';
       App.Host.numPlayersInRoom = 0;
 
-      App.Host.displayNewGameScreen();
+      this.displayNewGameScreen();
     },
     displayNewGameScreen : function() {
       App.switchView(App.$templateNewGame);
@@ -566,6 +567,7 @@ var App = {
           App.$handTiles[i].style.color = tiles[i].color;
           App.$handTiles[i].innerHTML = tiles[i].shape;
         } else {
+          App.$handTiles[i].style.display = "none";
           App.$handTiles[i].style.color = "";
           App.$handTiles[i].innerHTML = "";
         }
@@ -699,16 +701,16 @@ var App = {
          this.playedTiles[0].y === this.playedTiles[1].y);
     },
     updateActions: function() {
-      if (!!this.canPlay) {
+      if (this.canPlay) {
         App.$actions.style.visibility = "visible";
         App.$shiftTiles.style.visibility = this.selectedTile !== null || this.playedTiles.length > 0 || this.isChangingTiles
           ? "hidden"
           : "visible";
         App.$actApply.innerHTML = this.playedTiles.length > 0 ? "Jouer" : "Passer";
-        App.$actApply.style.visibility = this.isChangingTiles ? "hidden" : "visible";
-        App.$actChange.style.visibility = this.playedTiles.length > 0 ? "hidden" : "visible";
+        App.$actApply.style.visibility = this.isChangingTiles ? "hidden" : "inherit";
+        App.$actChange.style.visibility = this.playedTiles.length > 0 ? "hidden" : "inherit";
         App.$actCancel.style.visibility = this.selectedTile !== null || this.playedTiles.length > 0 || this.isChangingTiles
-          ? "visible" : "hidden";
+          ? "inherit" : "hidden";
       } else {
         App.$actions.style.visibility = "hidden";
         App.$shiftTiles.style.visibility = "hidden";

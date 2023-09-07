@@ -113,7 +113,7 @@ export class QwirkleGame {
         score: p.score
       }
     });
-    scoreBoard.sort((a, b) => a.score - b.score);
+    scoreBoard.sort((a, b) => b.score - a.score);
     return scoreBoard;
   }
 }

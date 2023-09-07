@@ -184,3 +184,12 @@ body {
 .endShift {
   margin-left: 35px;
 }
+#scoreboard-template table,
+#scoreboard-template th,
+#scoreboard-template td {
+  border: 1px solid blue;
+  padding: 10px;
+  border-radius: 30px;
+  text-align: center;
+  vertical-align: middle;
+}
