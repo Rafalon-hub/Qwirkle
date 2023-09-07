@@ -263,7 +263,7 @@ const App = {
    * @returns First free spot {x/y} absolute coords
    */
   rightFrom: function(x, y) {
-    for (let k = y + 1; k < (20-this.yStart); k++) {
+    for (let k = y + 1; k < (20+this.yStart); k++) {
       let theCell = this.getCell(x, k);
       if (theCell !== null && theCell.innerHTML == '') {
         return {
@@ -317,7 +317,7 @@ const App = {
    * @returns {{x: number, y: number} | null}
    */
   bottomFrom: function(x, y) {
-    for (let k = x + 1; k < (20-this.xStart); k++) {
+    for (let k = x + 1; k < (20+this.xStart); k++) {
       let theCell = this.getCell(k, y);
       if (theCell !== null && theCell.innerHTML == '') {
         return {
