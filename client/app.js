@@ -33,9 +33,25 @@ function onPlayerHand(tiles) {
 function onPlayerCanPlay(socketId) {
   App.Player.onCanPlay(socketId);
 }
+/**
+ * Updates front-end board
+ * @param {{
+ *  xStart: number,
+ *  yStart: number,
+ *  tiles: {
+ *    color: string,
+ *    shape: string,
+ *    x: number,
+ *    y: number,
+ *    justPlaced: boolean
+ *  }[]
+ * }} board 
+ */
 function onBoard(board) {
   App.xStart = board.xStart;
   App.yStart = board.yStart;
+  App.xEnd = BoardSize+board.xStart;
+  App.yEnd = BoardSize+board.yStart;
   App.tiles = board.tiles;
   App.updateBoard();
 }
@@ -50,14 +66,27 @@ function error() {
   
 }
 
+/** @type {number} */
+const BoardSize = 20;
+
 const App = {
   gameId: 0,
   role: '',
   socketId: '',
   currentRound: 0,
+  /** @type {{
+   *    color: string,
+   *    shape: string,
+   *    x: number,
+   *    y: number,
+   *    justPlaced: boolean
+   *  }[]
+   * } */
   tiles: [],
   xStart: 0,
   yStart: 0,
+  xEnd: BoardSize,
+  yEnd: BoardSize,
   init: function(socketId) {
     App.socketId = socketId;
     App.cacheElements();
@@ -117,9 +146,9 @@ const App = {
   },
   initBoard: function() {
     App.$board.innerHTML = "";
-    for (let i=this.xStart; i<(20+this.xStart); i++) {
-      for (let j=this.yStart; j<(20+this.yStart); j++) {
-        App.$board.innerHTML += `<div class='tile' onclick='App.Player.clickBoard(${i},${j})'></div>`;
+    for (let x=this.xStart; x<this.xEnd; x++) {
+      for (let y=this.yStart; y<this.yEnd; y++) {
+        App.$board.innerHTML += `<div class='tile' onclick='App.Player.clickBoard(${x},${y})'></div>`;
       }
     }
   },
@@ -150,8 +179,8 @@ const App = {
       }
     // if the player hasn't placed any tile, check the full board
     } else if (!App.Player.playedTiles.length) {
-      for (let i=this.xStart; i<(20+this.xStart); i++) {
-        for (let j=this.yStart; j<(20+this.yStart); j++) {
+      for (let i=this.xStart; i<this.xEnd; i++) {
+        for (let j=this.yStart; j<this.yEnd; j++) {
           if (App.canBePlaced(i, j)){
             coords.push({
               x: i,
@@ -188,12 +217,12 @@ const App = {
    * Gets the HTML cell corresponding to the x/y coordinates
    * @param {number} x Absolute X coord
    * @param {number} y Absolute Y coord
-   * @returns HTML cell or null if out of board
+   * @returns {HTMLElement | null} HTML cell or null if out of board
    */
   getCell: function(x, y) {
-    if (x < this.xStart || y < this.yStart || x > (19+this.xStart) || y > (19+this.yStart))
+    if (x < this.xStart || y < this.yStart || x >= this.xEnd || y >= this.yEnd)
       return null;
-    return this.$board.children[20 * (x-this.xStart) + (y-this.yStart)];
+    return this.$board.children[BoardSize * (x-this.xStart) + (y-this.yStart)];
   },
   /**
    * Lists all possible empty cell based on tiles already placed by player
@@ -263,7 +292,7 @@ const App = {
    * @returns First free spot {x/y} absolute coords
    */
   rightFrom: function(x, y) {
-    for (let k = y + 1; k < (20+this.yStart); k++) {
+    for (let k = y + 1; k < this.yEnd; k++) {
       let theCell = this.getCell(x, k);
       if (theCell !== null && theCell.innerHTML == '') {
         return {
@@ -317,7 +346,7 @@ const App = {
    * @returns {{x: number, y: number} | null}
    */
   bottomFrom: function(x, y) {
-    for (let k = x + 1; k < (20+this.xStart); k++) {
+    for (let k = x + 1; k < this.xEnd; k++) {
       let theCell = this.getCell(k, y);
       if (theCell !== null && theCell.innerHTML == '') {
         return {
@@ -328,24 +357,29 @@ const App = {
     }
     return null;
   },
-  /** Checks if there is a tile next to the cell */
-  checkNeighbour: function(i, j) {
-    return App.getCell(i-1, j)?.innerHTML?.length > 0 || App.getCell(i+1, j)?.innerHTML?.length > 0
-      || App.getCell(i, j-1)?.innerHTML?.length > 0 || App.getCell(i, j+1)?.innerHTML?.length > 0;
+  /**
+   * Checks if there is a tile next to the cell
+   * @param {number} x Absolute X coord
+   * @param {number} y Absolute Y coord
+   * @returns {boolean} result
+   */
+  checkNeighbour: function(x, y) {
+    return App.getCell(x-1, y)?.innerHTML?.length > 0 || App.getCell(x+1, y)?.innerHTML?.length > 0
+      || App.getCell(x, y-1)?.innerHTML?.length > 0 || App.getCell(x, y+1)?.innerHTML?.length > 0;
   },
   /**
    * Checks vertically if selected tile can be placed
-   * @param {number} i x coord
-   * @param {number} j y coord
+   * @param {number} x Absolute X coord
+   * @param {number} y Absolute Y coord
    * @returns {boolean} result
    */
-  checkVertical: function(i, j) {
+  checkVertical: function(x, y) {
     let vList = [];
     let k;
     let curTile;
 
-    for (k = i - 1; k >= this.xStart; k--) {
-      curTile = App.getCell(k, j);
+    for (k = x - 1; k >= this.xStart; k--) {
+      curTile = App.getCell(k, y);
       if (curTile != null && curTile.innerHTML != '') {
         vList.push({
           shape: curTile.innerHTML,
@@ -355,8 +389,8 @@ const App = {
         break;
       }
     }
-    for (k = +i + 1; k < (20+this.xStart); k++) {
-      curTile = App.getCell(k, j);
+    for (k = +x + 1; k < this.xEnd; k++) {
+      curTile = App.getCell(k, y);
       if (curTile != null && curTile.innerHTML != '') {
         vList.push({
           shape: curTile.innerHTML,
@@ -370,24 +404,24 @@ const App = {
       shape: App.Player.selectedTile.shape,
       color: App.Player.selectedTile.color
     });
-    console.log(`CheckVert(${i},${j})`);
+    console.log(`CheckVert(${x},${y})`);
     console.log(vList);
 
     return App.checkList(vList);
   },
   /**
    * Checks horizontally if selected tile can be placed
-   * @param {number} i x coord
-   * @param {number} j y coord
+   * @param {number} x Absolute X coord
+   * @param {number} y Absolute Y coord
    * @returns {boolean} result
    */
-  checkHorizontal: function(i, j) {
+  checkHorizontal: function(x, y) {
     let hList = [];
     let l;
     let curTile;
 
-    for (l = j - 1; l >= this.yStart; l--) {
-      curTile = App.getCell(i, l);
+    for (l = y - 1; l >= this.yStart; l--) {
+      curTile = App.getCell(x, l);
       if (curTile != null && curTile.innerHTML != '') {
         hList.push({
           shape: curTile.innerHTML,
@@ -397,8 +431,8 @@ const App = {
         break;
       }
     }
-    for (l = +j + 1; l < (20+this.yStart); l++) {
-      curTile = this.getCell(i, l);
+    for (l = +y + 1; l < this.yEnd; l++) {
+      curTile = this.getCell(x, l);
       if (curTile != null && curTile.innerHTML != '') {
         hList.push({
           shape: curTile.innerHTML,
@@ -418,7 +452,7 @@ const App = {
   /**
    * Checks if all tiles in a list are compatible
    * @param {{color: string, shape: string}[]} tileList 
-   * @returns True if all tiles are compatible, else false
+   * @returns {boolean} True if all tiles are compatible, else false
    */
   checkList: function(tileList) {
     let isGood = true;
@@ -456,7 +490,7 @@ const App = {
     setTimeout(() => {
       App.$message.innerHTML = '';
       App.$message.classList.add('none')
-    }, 3000);
+    }, 5000);
   },
   decodeHtml: function(html) {
     let txt = document.createElement("textarea");
@@ -578,18 +612,18 @@ const App = {
       this.updateActions();
     },
     selectTile: function(j) {
-      if (App.Player.canPlay && j < App.Player.tiles.length) {
-        let clickedTile = App.Player.tiles[j];
+      if (this.canPlay && j < this.tiles.length) {
+        let clickedTile = this.tiles[j];
 
-        if (App.Player.isChangingTiles) {
+        if (this.isChangingTiles) {
           if (App.$handTiles[j].className != 'tile selected') {
             App.$handTiles[j].className = 'tile selected';
-            App.Player.tilesToChange.push(clickedTile);
+            this.tilesToChange.push(clickedTile);
           } else {
             App.$handTiles[j].className = 'tile';
-            for (let k = 0; k < App.Player.tilesToChange.length; k++) {
-              if (App.Player.tilesToChange[k] == clickedTile) {
-                App.Player.tilesToChange.splice(k, 1);
+            for (let k = 0; k < this.tilesToChange.length; k++) {
+              if (this.tilesToChange[k] == clickedTile) {
+                this.tilesToChange.splice(k, 1);
                 break;
               }
             }
@@ -613,18 +647,23 @@ const App = {
         }
       }
     },
-    clickBoard: function(i, j) {
+    /**
+     * Performs action when player clicks on board
+     * @param {number} x Absolute X coord
+     * @param {number} y Absolute Y coord
+     */
+    clickBoard: function(x, y) {
       if (App.Player.canPlay) {
-        console.log(`Clicked on board: ${i}/${j}`);
-        let theCell = App.getCell(i, j);
+        console.log(`Clicked on board: ${x}/${y}`);
+        let theCell = App.getCell(x, y);
   
         if (App.Player.selectedTile != null && theCell.className == 'tile possible') {
-          App.Player.selectedTile.x = i;
-          App.Player.selectedTile.y = j;
+          App.Player.selectedTile.x = x;
+          App.Player.selectedTile.y = y;
           App.Player.playedTiles.push(App.Player.selectedTile);
   
           theCell.innerHTML = App.Player.selectedTile.shape;
-          theCell.style = 'color:' + App.Player.selectedTile.color;
+          theCell.style.color = App.Player.selectedTile.color;
           theCell.className = 'tile placed';
           App.clearPossible();
   
