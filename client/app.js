@@ -355,7 +355,7 @@ const App = {
         break;
       }
     }
-    for (k = +i + 1; k < (20-this.xStart); k++) {
+    for (k = +i + 1; k < (20+this.xStart); k++) {
       curTile = App.getCell(k, j);
       if (curTile != null && curTile.innerHTML != '') {
         vList.push({
@@ -397,7 +397,7 @@ const App = {
         break;
       }
     }
-    for (l = +j + 1; l < (20-this.yStart); l++) {
+    for (l = +j + 1; l < (20+this.yStart); l++) {
       curTile = this.getCell(i, l);
       if (curTile != null && curTile.innerHTML != '') {
         hList.push({
