@@ -7,7 +7,7 @@ const io = require('socket.io')(serv, {});
 const PORT = process.env.PORT || 8080;
 
 app.get('/', function (_req: any, res: any) {
-  res.sendFile(path.resolve('./client/index2.html'));
+  res.sendFile(path.resolve('./client/index.html'));
 });
 app.use('/client', express.static(path.resolve('./client')));
 
