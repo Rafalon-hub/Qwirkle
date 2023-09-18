@@ -1,6 +1,7 @@
 const socket = io();
 socket.on('connected', onConnected);
 socket.on('newGameCreated', onNewGameCreated);
+socket.on('rooms', onRoomList);
 socket.on('roomJoined', onRoomJoined);
 socket.on('playerList', onPlayerList);
 socket.on('gameStarted', onGameStarted);
@@ -17,6 +18,9 @@ function onConnected(socketId) {
 }
 function onNewGameCreated(data) {
   App.Host.gameInit(data);
+}
+function onRoomList(data) {
+  App.onRoomList(data);
 }
 function onRoomJoined(gameId) {
   App.Player.onRoomJoined(gameId);
@@ -104,6 +108,7 @@ const App = {
     App.$waitingRoom = document.getElementById('waiting-room-template');
     App.$game = document.getElementById('game-template');
     App.$scoreBoard = document.getElementById('scoreboard-template');
+    App.$roomsList = document.getElementById('rooms-list');
     App.$scoreList = document.getElementById('score-list');
     App.$playerName = document.getElementById('player-name');
     App.$gameId = document.getElementById('game-id');
@@ -143,6 +148,16 @@ const App = {
   },
   onStartGameClick: function() {
     socket.emit('startGame');
+  },
+  /**
+   * Gets the list of all unstarted game rooms
+   * @param {{roomId: number, nb: number}[]} data 
+   */
+  onRoomList: function(data) {
+    App.$roomsList.innerHTML = "";
+    data.forEach(r => {
+      App.$roomsList.innerHTML += `<div onclick='App.Player.onStartClick(${r.roomId})'>Room: ${r.roomId}\tJoueurs: ${r.nb}<div/>`;
+    });
   },
   initBoard: function() {
     App.$board.innerHTML = "";
@@ -555,11 +570,12 @@ const App = {
     /**
      * The player entered their name and gameId (hopefully)
      * and clicked Start.
+     * @param {number} gameId 
      */
-    onStartClick: function() {
+    onStartClick: function(gameId) {
       // collect data to send to the server
       let data = {
-        gameId : +(App.$doc.getElementById('inputGameId').value),
+        gameId : gameId || +(App.$doc.getElementById('inputGameId').value),
         playerName : App.$doc.getElementById('inputPlayerName').value || 'anon'
       };
 

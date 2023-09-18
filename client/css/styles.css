@@ -153,16 +153,15 @@ body {
   display: grid;
   grid-template-columns:
     auto auto auto auto auto auto;
-  height: 40px;
-  aspect-ratio: 6 / 1;
+  max-width: 260px;
 }
 #hand div {
   vertical-align: middle;
   text-align: center;
-  font-size: 5cqh;
-  line-height: 5cqh;
-  aspect-ratio: 1 / 1;
-  width: 100%;
+  font-size: 25pt;
+  line-height: 40px;
+  width: 40px;
+  height: 40px;
 }
 #message {
   margin: 0 auto;
