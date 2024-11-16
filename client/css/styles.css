@@ -35,6 +35,7 @@ body {
   padding: 5px;
   border-radius: 5px;
   width: 100%;
+  cursor: pointer;
 }
 .btn-success { background-color: #53e237; }
 .btn-success:hover { background-color: #2e7f1e; }
@@ -191,4 +192,13 @@ body {
   border-radius: 30px;
   text-align: center;
   vertical-align: middle;
+}
+
+#rooms-list div {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding: 5px;
+  background: mediumpurple;
+  cursor: pointer;
+  border-radius: 15px;
 }

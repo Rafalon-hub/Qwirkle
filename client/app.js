@@ -156,7 +156,7 @@ const App = {
   onRoomList: function(data) {
     App.$roomsList.innerHTML = "";
     data.forEach(r => {
-      App.$roomsList.innerHTML += `<div onclick='App.Player.onStartClick(${r.roomId})'>Room: ${r.roomId}\tJoueurs: ${r.nb}<div/>`;
+      App.$roomsList.innerHTML += `<div onclick='App.Player.onStartClick(${r.roomId})'>Room: ${r.roomId}\tJoueurs: ${r.nb}</div>`;
     });
   },
   initBoard: function() {
@@ -419,8 +419,8 @@ const App = {
       shape: App.Player.selectedTile.shape,
       color: App.Player.selectedTile.color
     });
-    console.log(`CheckVert(${x},${y})`);
-    console.log(vList);
+    // console.log(`CheckVert(${x},${y})`);
+    // console.log(vList);
 
     return App.checkList(vList);
   },
@@ -573,9 +573,13 @@ const App = {
      * @param {number} gameId 
      */
     onStartClick: function(gameId) {
+      const gId = Number.isInteger(+gameId)
+        ? +gameId
+        : +(App.$doc.getElementById('inputGameId').value);
+      
       // collect data to send to the server
       let data = {
-        gameId : gameId || +(App.$doc.getElementById('inputGameId').value),
+        gameId : gId,
         playerName : App.$doc.getElementById('inputPlayerName').value || 'anon'
       };
 
@@ -593,7 +597,7 @@ const App = {
       App.switchView(App.$waitingRoom);
     },
     onPlayerList: function(playerList) {
-      console.log(playerList);
+      // console.log(playerList);
       App.Host.players = playerList;
       let playerListEl = App.$doc.getElementById('playersWaiting');
       playerListEl.innerHTML = "";
@@ -670,7 +674,7 @@ const App = {
      */
     clickBoard: function(x, y) {
       if (App.Player.canPlay) {
-        console.log(`Clicked on board: ${x}/${y}`);
+        // console.log(`Clicked on board: ${x}/${y}`);
         let theCell = App.getCell(x, y);
   
         if (App.Player.selectedTile != null && theCell.className == 'tile possible') {
